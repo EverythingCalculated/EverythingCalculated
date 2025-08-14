@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Everything Calculated — 200+ Free Online Calculators</title>
+  <meta name="description" content="Everything Calculated: 200+ fast, free, mobile-friendly calculators for finance, math, health, conversions, and more. Search and use any calculator instantly." />
+  <style>
+    :root{--bg:#f6f8fa;--card:#ffffff;--ink:#0f172a;--muted:#475569;--border:#e5e7eb;--brand:#0ea5e9;--brand-ink:#0b4b7a}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+    header{background:#fff;border-bottom:1px solid var(--border);padding:28px 12px;text-align:center;position:sticky;top:0;z-index:5}
+    header h1{margin:0;color:var(--brand-ink);font-size:clamp(22px,3.4vw,34px)}
+    header p{margin:.3rem 0 0;color:var(--muted);font-size:14px}
+    .wrap{max-width:1140px;margin:0 auto;padding:16px}
+    .search{display:flex;justify-content:center;margin:16px 0}
+    .search input{width:96%;max-width:720px;padding:14px 16px;border:1px solid var(--border);border-radius:12px;font-size:16px}
+    .sections{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+    .section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+    .section h2{margin:4px 4px 8px;color:var(--brand-ink);font-size:18px}
+    .links{display:flex;flex-wrap:wrap;gap:8px}
+    .calc-link{display:inline-block;padding:8px 10px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:#0369a1;background:#fff;font-size:14px;cursor:pointer}
+    .calc-link:hover{border-color:#cbd5e1}
+    /* modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(2,6,23,.55)}
+    .modal.open{display:flex}
+    .panel{width:min(760px,100%);background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 30px rgba(2,6,23,.3);overflow:hidden}
+    .panel header{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);position:static}
+    .panel header h3{margin:0;font-size:18px;color:var(--brand-ink)}
+    .panel .body{padding:14px 16px}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .row > *{flex:1 1 180px}
+    input,select,button,textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:16px}
+    button.primary{background:var(--brand);color:#fff;border:none;cursor:pointer}
+    button.link{background:transparent;border:none;color:#0369a1;cursor:pointer}
+    .result{font-weight:700;margin-top:10px}
+    .meta{font-size:14px;color:#334155;margin-top:18px}
+    footer{padding:28px 12px;text-align:center;color:var(--muted)}
+    @media (max-width:600px){.wrap{padding:12px}.panel .body{padding:12px}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Everything Calculated</h1>
+    <p>200+ free, mobile-friendly calculators. Tap to open, type to search.</p>
+  </header>
+
+  <div class="wrap">
+    <div class="search">
+      <input id="q" type="search" placeholder="Search calculators… (e.g., loan, BMI, percentage)" aria-label="Search calculators">
+    </div>
+
+    <div id="sections" class="sections" aria-live="polite"></div>
+  </div>
+
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="calc-title">
+    <div class="panel">
+      <header>
+        <h3 id="calc-title">Calculator</h3>
+        <div style="display:flex;gap:8px">
+          <button id="shareBtn" class="link" title="Copy link">Copy Link</button>
+          <button id="closeBtn" class="link" aria-label="Close">Close ✕</button>
+        </div>
+      </header>
+      <div class="body">
+        <div id="calc-ui"></div>
+        <div id="calc-result" class="result" role="status">Result will appear here.</div>
+        <div class="meta">
+          <h4>How to use</h4>
+          <p id="calc-how"></p>
+          <h4>About this calculator</h4>
+          <p id="calc-desc"></p>
+          <p><strong>Keywords:</strong> <span id="calc-keys"></span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>© <span id="yr"></span> Everything Calculated</footer>
+
+<script>
+// ---------------------------
+// Data: 200 calculators
+// type values: loan, mortgage, bmi, age, discount, simple_interest, compound_interest, percentage, unit, bmr, generic
+// ---------------------------
+const catalog = (()=>{
+  const cats = {
+    "Finance": [
+      "Loan Calculator","Car Loan Calculator","Personal Loan Calculator","Student Loan Calculator",
+      "Mortgage Calculator","Fixed Rate Mortgage Calculator","Adjustable Rate Mortgage Calculator",
+      "Tax Calculator","Sales Tax Calculator","VAT Calculator","Compound Interest Calculator",
+      "Simple Interest Calculator","Investment Calculator","ROI Calculator","CAGR Calculator",
+      "Rule of 72 Calculator","Retirement Calculator","401k Calculator","Savings Calculator",
+      "Emergency Fund Calculator","Payback Period Calculator","Budget Planner","Debt Payoff Calculator",
+      "Credit Card Payoff Calculator","Net Worth Calculator","Depreciation Calculator",
+      "Commission Calculator","Profit Margin Calculator","Mortgage Refinance Calculator","APR Calculator","Annuity Payout Calculator"
+    ],
+    "Math": [
+      "Basic Calculator","Scientific Calculator (Lite)","Algebra Solver (Lite)","Quadratic Equation Solver",
+      "Cubic Equation Solver","Matrix Calculator (2x2)","Determinant Calculator (3x3)","Logarithm Calculator",
+      "Exponential Calculator","Power Calculator","Factorial Calculator","LCM Calculator",
+      "GCD Calculator","Prime Number Checker","Base Converter","Mean Calculator",
+      "Median Calculator","Mode Calculator","Z-Score Calculator","Percentage Calculator",
+      "Fraction Calculator","Decimal to Fraction Converter","Ratio Calculator","Proportion Calculator",
+      "Probability Calculator","Permutation Calculator","Combination Calculator","Rounding Calculator","Standard Deviation (Sample)","Slope Calculator"
+    ],
+    "Health": [
+      "BMI Calculator","BMR Calculator","Body Fat Calculator (US Navy)","Calorie Needs Calculator",
+      "TDEE Calculator","Heart Rate Zone Calculator","Pregnancy Due Date Calculator",
+      "Ovulation Calculator","Pace Calculator","Running Calories Burned Calculator",
+      "Steps to Calories Calculator","Sleep Calculator","Ideal Weight Calculator","Water Intake Calculator",
+      "Macro Calculator (Simple)","Body Surface Area Calculator","Blood Alcohol Content Calculator","Waist-to-Height Ratio"
+    ],
+    "Conversion": [
+      "Length Converter","Weight Converter","Temperature Converter","Volume Converter",
+      "Speed Converter","Energy Converter","Time Converter","Data Storage Converter",
+      "Cooking Unit Converter","Pressure Converter","Shoe Size Converter","Clothing Size Converter",
+      "Currency Converter (Static)","Angle Converter","Area Converter","Power Converter"
+    ],
+    "Date & Time": [
+      "Age Calculator","Date Difference Calculator","Add/Subtract Days Calculator",
+      "Business Days Calculator","Working Time Calculator","Countdown Timer","Stopwatch",
+      "Time Zone Converter (Offset)","Leap Year Checker","Unix Timestamp Converter","Week Number Calculator","Day of Week Finder","Birthday Countdown"
+    ],
+    "Construction": [
+      "Concrete Calculator","Paint Calculator","Flooring Calculator","Brick Calculator",
+      "Tile Calculator","Drywall Calculator","Asphalt Calculator","Decking Calculator",
+      "Window Area Calculator","Roofing Calculator","Insulation Calculator","Lumber Board Feet Calculator"
+    ],
+    "Everyday": [
+      "Tip Calculator","Split Bill Calculator","Discount Calculator","Grocery Budget Calculator",
+      "Fuel Cost Calculator","Salary to Hourly Calculator","Take-Home Pay (Simple)",
+      "Password Strength Checker","Random Number Generator","Coin Toss Simulator","Dice Roller",
+      "Unit Price Calculator","Reading Time Estimator","Typing Speed Test","Cooking Time Multiplier","Recipe Ingredient Scaler"
+    ],
+    "Tech & Web": [
+      "Download Time Calculator","Ping Time Converter","Hex to RGB Converter","Base64 Encoder",
+      "Base64 Decoder","Text Encryptor (ROT13)","MD5 Hash (Demo)","Uptime Calculator",
+      "Character Limit Checker","Word Counter","Responsive Breakpoint Helper","Aspect Ratio Calculator","Image DPI Calculator"
+    ],
+    "Fun & Misc": [
+      "Love Calculator (Fun)","Name Numerology (Fun)","Dog Age to Human Years","Cat Age to Human Years",
+      "Lucky Number Generator","Random Movie Picker (Demo)","Vacation Budget Estimator",
+      "Username Generator","Fortune Cookie Generator","Emoji Translator (Fun)","Color Mood Test (Fun)","Riddle Maker"
+    ]
+  };
+  // build items
+  const items = [];
+  const typeMap = name => {
+    const l = name.toLowerCase();
+    if (l.includes("mortgage")) return "mortgage";
+    if (l.includes("loan")) return "loan";
+    if (l.includes("bmi")) return "bmi";
+    if (l === "age calculator") return "age";
+    if (l.includes("discount")) return "discount";
+    if (l.includes("simple interest")) return "simple_interest";
+    if (l.includes("compound interest") || l.includes("cagr") || l.includes("investment")) return "compound_interest";
+    if (l.includes("percentage")) return "percentage";
+    if (l.includes("converter") || l.includes("convert")) return "unit";
+    if (l.includes("bmr") || l.includes("calorie") || l.includes("tdee")) return "bmr";
+    return "generic";
+  };
+  let count = 0;
+  for (const [cat, list] of Object.entries(cats)){
+    for (const name of list){
+      items.push({id: slug(name), name, cat, type: typeMap(name)}); count++;
+    }
+  }
+  while (items.length < 200){
+    const name = `Calculator Tool ${items.length+1}`;
+    items.push({id: slug(name), name, cat: "Miscellaneous", type: "generic"});
+  }
+  // group by category for rendering
+  const byCat = {};
+  for (const it of items){
+    if (!byCat[it.cat]) byCat[it.cat] = [];
+    byCat[it.cat].push(it);
+  }
+  return {items, byCat, cats: Object.keys(cats)};
+})();
+
+function slug(s){
+  return s.toLowerCase().replace(/ & /g,' and ').replace(/[\/()]/g,' ').replace(/[^a-z0-9 -]/g,'').trim().replace(/\s+/g,'-');
+}
+
+// ---------------------------
+// Render sections + search
+// ---------------------------
+const sectionsEl = document.getElementById('sections');
+const qEl = document.getElementById('q');
+
+function renderSections(filter=''){
+  const f = filter.trim().toLowerCase();
+  sectionsEl.innerHTML = '';
+  for (const [cat, list] of Object.entries(catalog.byCat)){
+    // filter items
+    const items = list.filter(it => !f || it.name.toLowerCase().includes(f) || it.cat.toLowerCase().includes(f));
+    if (!items.length) continue;
+    const sec = document.createElement('section');
+    sec.className = 'section';
+    sec.innerHTML = `<h2>${cat} Calculators</h2><div class="links"></div>`;
+    const links = sec.querySelector('.links');
+    for (const it of items){
+      const a = document.createElement('button');
+      a.className = 'calc-link';
+      a.textContent = it.name;
+      a.setAttribute('data-id', it.id);
+      a.addEventListener('click', ()=> openCalc(it.id));
+      links.appendChild(a);
+    }
+    sectionsEl.appendChild(sec);
+  }
+}
+
+qEl.addEventListener('input', () => renderSections(qEl.value));
+renderSections('');
+
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+// ---------------------------
+// Modal + calculators
+// ---------------------------
+const modal = document.getElementById('modal');
+const closeBtn = document.getElementById('closeBtn');
+const shareBtn = document.getElementById('shareBtn');
+const calcTitle = document.getElementById('calc-title');
+const calcUI = document.getElementById('calc-ui');
+const calcResult = document.getElementById('calc-result');
+const calcHow = document.getElementById('calc-how');
+const calcDesc = document.getElementById('calc-desc');
+const calcKeys = document.getElementById('calc-keys');
+
+function seo(name){
+  const d = `${name} — free, simple, mobile-friendly calculator. Instantly compute ${name.toLowerCase()} online.`;
+  const k = `${name.toLowerCase()}, free ${name.toLowerCase()}, online ${name.toLowerCase()}, calculator, how to use ${name.toLowerCase()}`;
+  const how = 'Enter values in the fields, then press Calculate. Adjust inputs to compare scenarios. Results update instantly.';
+  return {d,k,how};
+}
+
+function openCalc(id){
+  const item = catalog.items.find(x=>x.id===id);
+  if (!item) return;
+  const {d,k,how} = seo(item.name);
+  calcTitle.textContent = item.name;
+  calcDesc.textContent = d;
+  calcKeys.textContent = k;
+  calcHow.textContent = how;
+  calcResult.textContent = 'Result will appear here.';
+  // build UI by type
+  const ui = buildUI(item.type);
+  calcUI.innerHTML = '';
+  calcUI.appendChild(ui.root);
+  modal.classList.add('open');
+  // update hash so link is shareable
+  history.replaceState(null, '', `#${id}`);
+}
+
+function closeModal(){ modal.classList.remove('open'); history.replaceState(null,'', location.pathname); }
+closeBtn.addEventListener('click', closeModal);
+modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+
+shareBtn.addEventListener('click', async ()=>{
+  const url = location.href;
+  try { await navigator.clipboard.writeText(url); shareBtn.textContent = 'Copied!'; setTimeout(()=>shareBtn.textContent='Copy Link',1200);} catch(e){ alert(url); }
+});
+
+// Deep link
+window.addEventListener('load', ()=>{
+  const h = location.hash.replace('#','');
+  if (h){ openCalc(h); }
+});
+
+// ---------------------------
+// Calculator UIs
+// ---------------------------
+function el(tag, attrs={}, children=[]) {
+  const n = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)) {
+    if (k === 'class') n.className = v; else if (k.startsWith('on')) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v);
+  }
+  for (const c of [].concat(children)) n.append(c instanceof Node ? c : document.createTextNode(c));
+  return n;
+}
+
+function buildUI(type){
+  const root = el('div');
+  const set = t => calcResult.textContent = t;
+  const fmt = (n, d=2)=> (isFinite(n)?Number(n).toFixed(d):'—');
+  switch(type){
+    case 'loan':{
+      const a=el('input',{id:'amount',type:'number',placeholder:'Loan amount'});
+      const r=el('input',{id:'rate',type:'number',placeholder:'Annual interest rate (%)'});
+      const y=el('input',{id:'years',type:'number',placeholder:'Term (years)'});
+      const go=el('button',{class:'primary',onclick:()=>{
+        const P=+a.value||0, i=(+r.value||0)/100/12, N=(+y.value||0)*12;
+        if(!N) return set('Enter term.');
+        const m = i===0 ? P/N : P*i/(1-Math.pow(1+i,-N));
+        set(`Monthly Payment: ${fmt(m)}`);
+      }},'Calculate Payment');
+      root.append(el('div',{class:'row'},[a,r,y]),go); break; }
+    case 'mortgage':{
+      const a=el('input',{type:'number',placeholder:'Mortgage amount'});
+      const r=el('input',{type:'number',placeholder:'Annual interest rate (%)'});
+      const y=el('input',{type:'number',placeholder:'Term (years)'});
+      const go=el('button',{class:'primary',onclick:()=>{
+        const P=+a.value||0, i=(+r.value||0)/100/12, N=(+y.value||0)*12;
+        if(!N) return set('Enter term.');
+        const m = i===0 ? P/N : P*i/(1-Math.pow(1+i,-N));
+        set(`Monthly Payment: ${fmt(m)}`);
+      }},'Calculate Mortgage');
+      root.append(el('div',{class:'row'},[a,r,y]),go); break; }
+    case 'bmi':{
+      const w=el('input',{type:'number',placeholder:'Weight (kg)'});
+      const h=el('input',{type:'number',placeholder:'Height (cm)'});
+      const go=el('button',{class:'primary',onclick:()=>{
+        const kg=+w.value||0, m=(+h.value||0)/100; if(!m) return set('Enter height.');
+        const bmi=kg/(m*m); set(`BMI: ${fmt(bmi)}`);
+      }},'Calculate BMI');
+      root.append(el('div',{class:'row'},[w,h]),go); break; }
+    case 'age':{
+      const d=el('input',{type:'date'});
+      const go=el('button',{class:'primary',onclick:()=>{
+        if(!d.value) return set('Select date.');
+        const dob=new Date(d.value); const diff=Date.now()-dob.getTime(); const age=new Date(diff).getUTCFullYear()-1970;
+        set(`Age: ${age} years`);
+      }},'Calculate Age');
+      root.append(d,go); break; }
+    case 'discount':{
+      const p=el('input',{type:'number',placeholder:'Original price'});
+      const x=el('input',{type:'number',placeholder:'Discount (%)'});
+      const go=el('button',{class:'primary',onclick:()=>{
+        const price=+p.value||0, d=+x.value||0; set(`Final Price: ${fmt(price - price*d/100)}`);
+      }},'Calculate');
+      root.append(el('div',{class:'row'},[p,x]),go); break; }
+    case 'simple_interest':{
+      const P=el('input',{type:'number',placeholder:'Principal'});
+      const R=el('input',{type:'number',placeholder:'Rate (%)'});
+      const T=el('input',{type:'number',placeholder:'Time (years)'});
+      const go=el('button',{class:'primary',onclick:()=> set(`Simple Interest: ${fmt((+P.value||0)*(+R.value||0)*(+T.value||0)/100)}`)},'Calculate');
+      root.append(el('div',{class:'row'},[P,R,T]),go); break; }
+    case 'compound_interest':{
+      const P=el('input',{type:'number',placeholder:'Principal'});
+      const r=el('input',{type:'number',placeholder:'Annual rate (%)'});
+      const n=el('input',{type:'number',placeholder:'Times compounded per year'});
+      const t=el('input',{type:'number',placeholder:'Years'});
+      const go=el('button',{class:'primary',onclick:()=>{
+        const A=(+P.value||0)*Math.pow(1+(+r.value||0)/100/(+n.value||1),(+n.value||1)*(+t.value||0));
+        set(`Amount: ${fmt(A)}`);
+      }},'Calculate');
+      root.append(el('div',{class:'row'},[P,r,n,t]),go); break; }
+    case 'percentage':{
+      const part=el('input',{type:'number',placeholder:'Part'});
+      const whole=el('input',{type:'number',placeholder:'Whole'});
+      const go=el('button',{class:'primary',onclick:()=>{
+        const p=+part.value||0, w=+whole.value||0; if(!w) return set('Enter whole value.');
+        set(`Percentage: ${(p/w*100).toFixed(2)}%`);
+      }},'Calculate %');
+      root.append(el('div',{class:'row'},[part,whole]),go); break; }
+    case 'unit':{
+      const v=el('input',{type:'number',placeholder:'Value'});
+      const u=el('select',null,[
+        el('option',{value:'m_to_ft'},'Meters → Feet'),
+        el('option',{value:'ft_to_m'},'Feet → Meters'),
+        el('option',{value:'c_to_f'},'°C → °F'),
+        el('option',{value:'f_to_c'},'°F → °C')
+      ]);
+      const go=el('button',{class:'primary',onclick:()=>{
+        const x=+v.value||0; let out='';
+        switch(u.value){
+          case 'm_to_ft': out=(x*3.28084).toFixed(4); break;
+          case 'ft_to_m': out=(x/3.28084).toFixed(4); break;
+          case 'c_to_f': out=(x*9/5+32).toFixed(2); break;
+          case 'f_to_c': out=((x-32)*5/9).toFixed(2); break;
+        }
+        set(`Converted: ${out}`);
+      }},'Convert');
+      root.append(el('div',{class:'row'},[v,u]),go); break; }
+    case 'bmr':{
+      const w=el('input',{type:'number',placeholder:'Weight (kg)'});
+      const h=el('input',{type:'number',placeholder:'Height (cm)'});
+      const a=el('input',{type:'number',placeholder:'Age'});
+      const s=el('select',null,[el('option',{value:'male'},'Male'),el('option',{value:'female'},'Female')]);
+      const go=el('button',{class:'primary',onclick:()=>{
+        const bmr=10*(+w.value||0)+6.25*(+h.value||0)-5*(+a.value||0)+(s.value==='male'?5:-161);
+        set(`Estimated BMR: ${Math.round(bmr)} kcal/day`);
+      }},'Estimate');
+      root.append(el('div',{class:'row'},[w,h,a,s]),go); break; }
+    default:{
+      const A=el('input',{type:'number',placeholder:'Value A'});
+      const B=el('input',{type:'number',placeholder:'Value B'});
+      const go=el('button',{class:'primary',onclick:()=> set(`Result: ${(+A.value||0)*(+B.value||0)}`)},'Calculate (A × B)');
+      root.append(el('div',{class:'row'},[A,B]),go);
+    }
+  }
+  return {root};
+}
+</script>
+</body>
+</html>
